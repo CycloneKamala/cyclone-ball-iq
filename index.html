@@ -1,0 +1,1661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cyclone Ball IQ</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f3;min-height:100vh;padding:0 0 40px}
+.header{background:#CC0000;color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:36px;height:36px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#CC0000;font-weight:700;font-size:18px}
+.logo-text{font-size:18px;font-weight:600}
+.logo-sub{font-size:11px;opacity:.8;margin-top:1px}
+.header-right{display:flex;gap:8px;align-items:center}
+.streak-badge{background:rgba(255,255,255,.2);border-radius:20px;padding:5px 12px;font-size:13px;font-weight:500}
+.icon-btn{width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,.15);border:none;color:#fff;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+.icon-btn:hover{background:rgba(255,255,255,.25)}
+.container{max-width:720px;margin:0 auto;padding:20px 16px}
+.puzzle-info{text-align:center;margin-bottom:16px}
+.puzzle-num{font-size:13px;color:#888}
+.date-str{font-size:12px;color:#aaa}
+.cols-header{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1.8fr;gap:5px;margin-bottom:6px}
+.col-lbl{font-size:10px;font-weight:600;color:#999;text-align:center;text-transform:uppercase;letter-spacing:.05em}
+.col-lbl:first-child{text-align:left}
+.guess-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1.8fr;gap:5px;margin-bottom:5px}
+.cell{border-radius:8px;padding:8px 4px;text-align:center;font-size:12px;font-weight:600;min-height:42px;display:flex;align-items:center;justify-content:center;border:1.5px solid #ddd;background:#efefed;color:#999}
+.cell.name-cell{text-align:left;justify-content:flex-start;padding-left:8px;font-size:11px}
+.cell.exact{background:#1D9E75;border-color:#1D9E75;color:#fff}
+.cell.close{background:#EF9F27;border-color:#EF9F27;color:#fff}
+.cell.wrong{background:#efefed;border-color:#ddd;color:#aaa}
+.cell.empty{opacity:.35}
+.cell.up::after{content:" ↑";font-size:10px}
+.cell.down::after{content:" ↓";font-size:10px}
+.tries-dots{display:flex;gap:5px;justify-content:center;margin:10px 0 12px}
+.dot{width:10px;height:10px;border-radius:50%;background:#CC0000;opacity:.2}
+.dot.used{opacity:1}
+.dot.current{opacity:1;box-shadow:0 0 0 2px #fff,0 0 0 3.5px #CC0000}
+.input-area{display:flex;gap:8px;margin-bottom:6px}
+.input-wrap{flex:1;position:relative}
+#guess-input{width:100%;padding:10px 14px;font-size:14px;border-radius:8px;border:1.5px solid #ccc;background:#fff;color:#1a1a1a;outline:none}
+#guess-input:focus{border-color:#CC0000}
+#guess-input:disabled{opacity:.5}
+#guess-btn{padding:0 22px;height:42px;border-radius:8px;background:#CC0000;color:#fff;border:none;font-size:14px;font-weight:600;cursor:pointer}
+#guess-btn:hover{background:#aa0000}
+#guess-btn:disabled{opacity:.4;cursor:default}
+.suggestions{position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid #ddd;border-radius:8px;z-index:50;max-height:220px;overflow-y:auto;margin-top:3px;box-shadow:0 4px 12px rgba(0,0,0,.08);display:none}
+.suggestion{padding:10px 14px;font-size:13px;cursor:pointer;color:#1a1a1a;border-bottom:.5px solid #f0f0f0}
+.suggestion:last-child{border-bottom:none}
+.suggestion:hover,.suggestion.active{background:#f5f5f3}
+.legend{display:flex;gap:12px;font-size:11px;color:#999;flex-wrap:wrap;margin-bottom:16px}
+.leg{display:flex;align-items:center;gap:5px}
+.leg-dot{width:10px;height:10px;border-radius:3px}
+.tries-left{text-align:center;font-size:13px;color:#888;margin-bottom:12px}
+.msg{padding:14px;border-radius:10px;font-size:15px;font-weight:600;text-align:center;margin-bottom:14px;display:none}
+.msg.win{background:#E1F5EE;color:#085041;display:block}
+.msg.lose{background:#FCEBEB;color:#501313;display:block}
+.post-game{display:none;margin-top:16px}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.stat-card{background:#fff;border-radius:10px;border:1px solid #e8e8e6;padding:12px;text-align:center}
+.stat-num{font-size:24px;font-weight:700;color:#1a1a1a}
+.stat-lbl{font-size:11px;color:#999;margin-top:2px}
+.emoji-result{background:#f0eeea;border-radius:10px;padding:14px;font-size:22px;line-height:1.6;letter-spacing:2px;margin-bottom:14px;text-align:center}
+.action-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.action-btn{height:42px;border-radius:8px;border:1.5px solid #ddd;background:#fff;font-size:13px;font-weight:600;cursor:pointer;color:#1a1a1a;display:flex;align-items:center;justify-content:center;gap:6px}
+.action-btn.primary{background:#CC0000;color:#fff;border-color:#CC0000}
+.next-puzzle{text-align:center}
+.next-lbl{font-size:12px;color:#aaa;margin-bottom:4px}
+.countdown{font-size:22px;font-weight:700;color:#1a1a1a;letter-spacing:2px}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:16px}
+.overlay.open{display:flex}
+.modal{background:#fff;border-radius:16px;padding:24px;max-width:460px;width:100%;max-height:90vh;overflow-y:auto}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.modal-title{font-size:18px;font-weight:700}
+.close-btn{background:none;border:none;font-size:22px;cursor:pointer;color:#999}
+.how-row{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px}
+.how-num{width:24px;height:24px;border-radius:50%;background:#CC0000;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.how-text{font-size:14px;color:#555;line-height:1.5;padding-top:2px}
+.ex-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1.8fr;gap:4px;margin:10px 0}
+.ex-cell{border-radius:6px;padding:6px 4px;text-align:center;font-size:11px;font-weight:600;border:1.5px solid #ddd;background:#efefed;color:#999}
+.ex-cell.exact{background:#1D9E75;border-color:#1D9E75;color:#fff}
+.ex-cell.close{background:#EF9F27;border-color:#EF9F27;color:#fff}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:300}
+.reveal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center;padding:16px}
+.reveal-overlay.open{display:flex}
+.reveal-card{background:#fff;border-radius:20px;max-width:380px;width:100%;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.reveal-card-header{background:#CC0000;padding:24px 24px 20px;text-align:center;position:relative}
+.reveal-card-header.win{background:#1D9E75}
+.reveal-result-label{font-size:12px;font-weight:600;color:rgba(255,255,255,.75);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+.reveal-player-name{font-size:26px;font-weight:700;color:#fff;line-height:1.2;margin-bottom:4px}
+.reveal-silhouette{width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.15);border:3px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:40px}
+.reveal-card-body{padding:20px 24px}
+.reveal-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.reveal-stat{background:#f5f5f3;border-radius:10px;padding:10px 12px}
+.reveal-stat-label{font-size:10px;font-weight:600;color:#999;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+.reveal-stat-value{font-size:16px;font-weight:700;color:#1a1a1a}
+.reveal-coach-row{background:#f5f5f3;border-radius:10px;padding:10px 12px;margin-bottom:16px}
+.reveal-card-actions{display:flex;gap:8px}
+.reveal-btn{flex:1;height:42px;border-radius:8px;border:1.5px solid #ddd;background:#fff;font-size:13px;font-weight:600;cursor:pointer;color:#1a1a1a}
+.reveal-btn.primary{background:#CC0000;color:#fff;border-color:#CC0000}
+.reveal-btn:hover{opacity:.85}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">C</div>
+    <div><div class="logo-text">Cyclone Ball IQ</div><div class="logo-sub">Daily ISU basketball puzzle</div></div>
+  </div>
+  <div class="header-right">
+    <div class="streak-badge" id="streak-badge">🔥 0</div>
+    <button class="icon-btn" id="how-btn" title="How to play">?</button>
+    <button class="icon-btn" id="stats-btn" title="Stats">📊</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="puzzle-info">
+    <div class="puzzle-num" id="puzzle-num"></div>
+    <div class="date-str" id="date-str"></div>
+  </div>
+  <div class="cols-header">
+    <div class="col-lbl">Player</div>
+    <div class="col-lbl">Pos</div>
+    <div class="col-lbl">Height</div>
+    <div class="col-lbl">Jersey</div>
+    <div class="col-lbl">Games</div>
+    <div class="col-lbl">Coach</div>
+  </div>
+  <div id="rows"></div>
+  <div class="tries-dots" id="dots"></div>
+  <div class="tries-left" id="tries-left"></div>
+  <div class="msg" id="msg"></div>
+  <div class="input-area">
+    <div class="input-wrap">
+      <input type="text" id="guess-input" placeholder="Type a player name..." autocomplete="off">
+      <div class="suggestions" id="suggestions"></div>
+    </div>
+    <button id="guess-btn">Guess</button>
+  </div>
+  <div class="legend">
+    <div class="leg"><div class="leg-dot" style="background:#1D9E75"></div> Exact</div>
+    <div class="leg"><div class="leg-dot" style="background:#EF9F27"></div> Close (height ±2", jersey ±3, games ±10)</div>
+    <div class="leg"><div class="leg-dot" style="background:#ddd"></div> No match</div>
+    <div class="leg" style="color:#bbb">↑↓ arrows = guess higher/lower</div>
+  </div>
+  <div class="post-game" id="post-game">
+    <div class="stats-grid" id="result-stats"></div>
+    <div class="emoji-result" id="emoji-result"></div>
+    <div class="action-btns">
+      <button class="action-btn" id="copy-btn">🔗 Copy result</button>
+      <button class="action-btn primary" id="share-btn">↗ Share</button>
+    </div>
+    <div class="next-puzzle">
+      <div class="next-lbl">Next puzzle in</div>
+      <div class="countdown" id="countdown">--:--:--</div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay open" id="welcome-overlay">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Welcome to Cyclone Ball IQ!</div><button class="close-btn" id="welcome-close">✕</button></div>
+    <div style="font-size:14px;color:#555;margin-bottom:16px;line-height:1.6">Guess the mystery Iowa State men's basketball player in 8 tries. A new puzzle drops every day — same player for everyone.</div>
+    <div style="margin:0 0 6px;font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.05em">Position</div>
+    <div class="ex-row" style="grid-template-columns:1fr 1fr;margin-bottom:4px">
+      <div class="ex-cell exact">Guard</div><div class="ex-cell" style="background:#efefed;color:#999">Forward</div>
+    </div>
+    <div style="font-size:12px;color:#777;margin-bottom:10px">Green = exact. Yellow = within 3 numbers. Arrow shows if the answer is higher ↑ or lower ↓.</div>
+    <div style="margin:0 0 6px;font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.05em">Height</div>
+    <div class="ex-row" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:4px">
+      <div class="ex-cell exact">6'4"</div><div class="ex-cell close">6'6" ↑</div><div class="ex-cell" style="background:#efefed;color:#999">6'1" ↑</div>
+    </div>
+    <div style="font-size:12px;color:#777;margin-bottom:10px">Yellow = within 2 inches. Arrow = guess higher ↑ or lower ↓.</div>
+    <div style="margin:0 0 6px;font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.05em">Jersey number</div>
+    <div class="ex-row" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:4px">
+      <div class="ex-cell exact">#11</div><div class="ex-cell close">#14 ↑</div><div class="ex-cell" style="background:#efefed;color:#999">#22 ↑</div>
+    </div>
+    <div style="font-size:12px;color:#777;margin-bottom:10px">Green = exact. Yellow = within 3 numbers. Arrow shows if the answer is higher ↑ or lower ↓.</div>
+    <div style="margin:0 0 6px;font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.05em">Games played</div>
+    <div class="ex-row" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:4px">
+      <div class="ex-cell exact">140</div><div class="ex-cell close">133 ↑</div><div class="ex-cell" style="background:#efefed;color:#999">57 ↑</div>
+    </div>
+    <div style="font-size:12px;color:#777;margin-bottom:10px">Yellow = within 10 games. Arrow = guess higher ↑ or lower ↓.</div>
+    <div style="margin:0 0 6px;font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.05em">Head coach</div>
+    <div class="ex-row" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:4px">
+      <div class="ex-cell exact" style="font-size:10px">Hoiberg and Prohm</div><div class="ex-cell close" style="font-size:10px">Hoiberg</div><div class="ex-cell" style="background:#efefed;color:#999;font-size:10px">Otzelberger</div>
+    </div>
+    <div style="font-size:12px;color:#777;margin-bottom:16px">Yellow = at least one coach in common. Gray = no overlap.</div>
+    
+<div style="margin-top:12px;padding-top:14px;border-top:1px solid #eee"><div style="font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Players not in the game</div><div style="font-size:12px;color:#888;line-height:1.8">Aaron Law &nbsp;·&nbsp; Austin McBeth &nbsp;·&nbsp; Blake Hinson &nbsp;·&nbsp; Brady Ernst &nbsp;·&nbsp; Calvin Godfrey &nbsp;·&nbsp; Cameron Fowler &nbsp;·&nbsp; Carter Boothe &nbsp;·&nbsp; Daniel Stensland &nbsp;·&nbsp; Darlinstone Dubar &nbsp;·&nbsp; DeMarcus Phillips &nbsp;·&nbsp; Dudley Blackwell &nbsp;·&nbsp; Eric McKnight &nbsp;·&nbsp; Eric Steyer &nbsp;·&nbsp; Georgios Tsalmpouris &nbsp;·&nbsp; Jeremiah Williams &nbsp;·&nbsp; John Lamb &nbsp;·&nbsp; K.J. Bluford &nbsp;·&nbsp; Matt Mooney &nbsp;·&nbsp; Nate Jenkins &nbsp;·&nbsp; Nate Schuster &nbsp;·&nbsp; Nkereuwem Okoro &nbsp;·&nbsp; Ray Kasongo &nbsp;·&nbsp; Simeon Carter &nbsp;·&nbsp; Stuart Nezlek &nbsp;·&nbsp; Tavon Sledge &nbsp;·&nbsp; Tyler Ellerman &nbsp;·&nbsp; Wes Greder</div></div>
+<button id="welcome-start" style="width:100%;height:44px;background:#CC0000;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer">Let's play!</button>
+  </div>
+</div>
+
+<div class="overlay" id="how-overlay">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">How to play</div><button class="close-btn" id="how-close">✕</button></div>
+    <div class="how-row"><div class="how-num">1</div><div class="how-text">Guess any Iowa State men's basketball player. A new puzzle drops every day at midnight and everyone gets the same player.</div></div>
+    <div class="how-row"><div class="how-num">2</div><div class="how-text">Each guess reveals clues across 6 categories. Green means exact, yellow means close, gray means no match.</div></div>
+
+    <div style="margin:14px 0 6px;font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.05em">Position</div>
+    <div class="ex-row" style="grid-template-columns:1fr 1fr;margin-bottom:4px">
+      <div class="ex-cell exact">Guard</div>
+      <div class="ex-cell" style="background:#efefed;color:#999">Forward</div>
+    </div>
+    <div style="font-size:12px;color:#777;margin-bottom:12px">Green = same position. No yellow — it's either right or wrong.</div>
+
+    <div style="margin:0 0 6px;font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.05em">Height</div>
+    <div class="ex-row" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:4px">
+      <div class="ex-cell exact">6'4"</div>
+      <div class="ex-cell close">6'6" ↑</div>
+      <div class="ex-cell" style="background:#efefed;color:#999">6'1" ↑</div>
+    </div>
+    <div style="font-size:12px;color:#777;margin-bottom:12px">Green = exact height. Yellow = within 2 inches. Arrow points toward the answer (↑ means guess higher, ↓ means guess lower).</div>
+
+    <div style="margin:0 0 6px;font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.05em">Jersey number</div>
+    <div class="ex-row" style="grid-template-columns:1fr 1fr;margin-bottom:4px">
+      <div class="ex-cell exact">#11</div>
+      <div class="ex-cell" style="background:#efefed;color:#999">#22</div>
+    </div>
+    <div style="font-size:12px;color:#777;margin-bottom:12px">Green = exact jersey number. No yellow — it's either right or wrong.</div>
+
+    <div style="margin:0 0 6px;font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.05em">Games played</div>
+    <div class="ex-row" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:4px">
+      <div class="ex-cell exact">140</div>
+      <div class="ex-cell close">133 ↑</div>
+      <div class="ex-cell" style="background:#efefed;color:#999">57 ↑</div>
+    </div>
+    <div style="font-size:12px;color:#777;margin-bottom:12px">Green = exact. Yellow = within 10 games. Arrow points toward the answer.</div>
+
+    <div style="margin:0 0 6px;font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.05em">Head coach</div>
+    <div class="ex-row" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:4px">
+      <div class="ex-cell exact" style="font-size:10px">Hoiberg and Prohm</div>
+      <div class="ex-cell close" style="font-size:10px">Hoiberg</div>
+      <div class="ex-cell" style="background:#efefed;color:#999;font-size:10px">Otzelberger</div>
+    </div>
+    <div style="font-size:12px;color:#777;margin-bottom:4px">Green = exact match. Yellow = at least one coach in common (e.g. you guessed a Hoiberg player and the answer played under both Hoiberg and Prohm). Gray = no coaches in common.</div>
+  
+<div style="margin-top:16px;padding-top:14px;border-top:1px solid #eee"><div style="font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Players not in the game</div><div style="font-size:12px;color:#888;line-height:1.8">Aaron Law &nbsp;·&nbsp; Austin McBeth &nbsp;·&nbsp; Blake Hinson &nbsp;·&nbsp; Brady Ernst &nbsp;·&nbsp; Calvin Godfrey &nbsp;·&nbsp; Cameron Fowler &nbsp;·&nbsp; Carter Boothe &nbsp;·&nbsp; Daniel Stensland &nbsp;·&nbsp; Darlinstone Dubar &nbsp;·&nbsp; DeMarcus Phillips &nbsp;·&nbsp; Dudley Blackwell &nbsp;·&nbsp; Eric McKnight &nbsp;·&nbsp; Eric Steyer &nbsp;·&nbsp; Georgios Tsalmpouris &nbsp;·&nbsp; Jeremiah Williams &nbsp;·&nbsp; John Lamb &nbsp;·&nbsp; K.J. Bluford &nbsp;·&nbsp; Matt Mooney &nbsp;·&nbsp; Nate Jenkins &nbsp;·&nbsp; Nate Schuster &nbsp;·&nbsp; Nkereuwem Okoro &nbsp;·&nbsp; Ray Kasongo &nbsp;·&nbsp; Simeon Carter &nbsp;·&nbsp; Stuart Nezlek &nbsp;·&nbsp; Tavon Sledge &nbsp;·&nbsp; Tyler Ellerman &nbsp;·&nbsp; Wes Greder</div></div></div>
+</div>
+
+<div class="overlay" id="stats-overlay">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Statistics</div><button class="close-btn" id="stats-close">✕</button></div>
+    <div class="stats-grid" id="modal-stats"></div>
+    <div style="font-size:13px;font-weight:600;color:#555;margin:12px 0 8px">Guess distribution</div>
+    <div id="dist"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="reveal-overlay" id="reveal-overlay">
+  <div class="reveal-card" id="reveal-card">
+    <div class="reveal-card-header" id="reveal-header">
+      <div class="reveal-silhouette" id="reveal-silhouette">🏀</div>
+      <div class="reveal-result-label" id="reveal-result-label"></div>
+      <div class="reveal-player-name" id="reveal-player-name"></div>
+    </div>
+    <div class="reveal-card-body">
+      <div class="reveal-stats">
+        <div class="reveal-stat"><div class="reveal-stat-label">Position</div><div class="reveal-stat-value" id="rv-pos"></div></div>
+        <div class="reveal-stat"><div class="reveal-stat-label">Height</div><div class="reveal-stat-value" id="rv-height"></div></div>
+        <div class="reveal-stat"><div class="reveal-stat-label">Jersey</div><div class="reveal-stat-value" id="rv-jersey"></div></div>
+        <div class="reveal-stat"><div class="reveal-stat-label">Games Played</div><div class="reveal-stat-value" id="rv-gp"></div></div>
+        <div class="reveal-stat"><div class="reveal-stat-label">Years at ISU</div><div class="reveal-stat-value" id="rv-years"></div></div>
+        <div class="reveal-stat"><div class="reveal-stat-label">Guesses Used</div><div class="reveal-stat-value" id="rv-guesses"></div></div>
+      </div>
+      <div class="reveal-coach-row">
+        <div class="reveal-stat-label">Head Coach</div>
+        <div class="reveal-stat-value" style="font-size:14px" id="rv-coach"></div>
+      </div>
+      <div class="reveal-card-actions">
+        <button class="reveal-btn" id="reveal-share">↗ Share result</button>
+        <button class="reveal-btn primary" id="reveal-close">Done</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var PLAYERS = [
+  {
+    "name": "Diante Garrett",
+    "pos": "Guard",
+    "height": 76,
+    "heightStr": "6'4\"",
+    "jersey": "10",
+    "gp": 128,
+    "coach": "McDermott and Hoiberg",
+    "years": "2007-2011"
+  },
+  {
+    "name": "Scott Christopherson",
+    "pos": "Guard",
+    "height": 75,
+    "heightStr": "6'3\"",
+    "jersey": "11",
+    "gp": 97,
+    "coach": "McDermott and Hoiberg",
+    "years": "2009-2013"
+  },
+  {
+    "name": "Darion Anderson",
+    "pos": "Guard",
+    "height": 74,
+    "heightStr": "6'2\"",
+    "jersey": "5",
+    "gp": 32,
+    "coach": "McDermott and Hoiberg",
+    "years": "2008-2011"
+  },
+  {
+    "name": "Jamie Vanderbeken",
+    "pos": "Forward",
+    "height": 83,
+    "heightStr": "6'11\"",
+    "jersey": "23",
+    "gp": 70,
+    "coach": "McDermott and Hoiberg",
+    "years": "2007-2011"
+  },
+  {
+    "name": "Drew Mitchell",
+    "pos": "Forward",
+    "height": 79,
+    "heightStr": "6'7\"",
+    "jersey": "34",
+    "gp": 32,
+    "coach": "McDermott and Hoiberg",
+    "years": "2008-2011"
+  },
+  {
+    "name": "Melvin Ejim",
+    "pos": "Forward",
+    "height": 78,
+    "heightStr": "6'6\"",
+    "jersey": "3",
+    "gp": 135,
+    "coach": "Hoiberg",
+    "years": "2010-2014"
+  },
+  {
+    "name": "Jordan Railey",
+    "pos": "Center",
+    "height": 83,
+    "heightStr": "6'11\"",
+    "jersey": "0",
+    "gp": 37,
+    "coach": "Hoiberg",
+    "years": "2010-2014"
+  },
+  {
+    "name": "Bubu Palo",
+    "pos": "Guard",
+    "height": 73,
+    "heightStr": "6'1\"",
+    "jersey": "1",
+    "gp": 86,
+    "coach": "Hoiberg",
+    "years": "2010-2015"
+  },
+  {
+    "name": "Anthony Booker",
+    "pos": "Forward",
+    "height": 81,
+    "heightStr": "6'9\"",
+    "jersey": "22",
+    "gp": 62,
+    "coach": "Hoiberg",
+    "years": "2010-2013"
+  },
+  {
+    "name": "Chris Allen",
+    "pos": "Guard",
+    "height": 75,
+    "heightStr": "6'3\"",
+    "jersey": "4",
+    "gp": 68,
+    "coach": "Hoiberg",
+    "years": "2010-2013"
+  },
+  {
+    "name": "Chris Babb",
+    "pos": "Guard",
+    "height": 77,
+    "heightStr": "6'5\"",
+    "jersey": "2",
+    "gp": 66,
+    "coach": "Hoiberg",
+    "years": "2010-2013"
+  },
+  {
+    "name": "Royce White",
+    "pos": "Forward",
+    "height": 80,
+    "heightStr": "6'8\"",
+    "jersey": "30",
+    "gp": 34,
+    "coach": "Hoiberg",
+    "years": "2011-2012"
+  },
+  {
+    "name": "Tyrus McGee",
+    "pos": "Guard",
+    "height": 74,
+    "heightStr": "6'2\"",
+    "jersey": "25",
+    "gp": 68,
+    "coach": "Hoiberg",
+    "years": "2011-2014"
+  },
+  {
+    "name": "Percy Gibson",
+    "pos": "Center",
+    "height": 81,
+    "heightStr": "6'9\"",
+    "jersey": "24",
+    "gp": 73,
+    "coach": "Hoiberg",
+    "years": "2011-2014"
+  },
+  {
+    "name": "Will Clyburn",
+    "pos": "Guard",
+    "height": 79,
+    "heightStr": "6'7\"",
+    "jersey": "21",
+    "gp": 34,
+    "coach": "Hoiberg",
+    "years": "2012-2013"
+  },
+  {
+    "name": "Korie Lucious",
+    "pos": "Guard",
+    "height": 71,
+    "heightStr": "5'11\"",
+    "jersey": "13",
+    "gp": 34,
+    "coach": "Hoiberg",
+    "years": "2012-2013"
+  },
+  {
+    "name": "Georges Niang",
+    "pos": "Forward",
+    "height": 80,
+    "heightStr": "6'8\"",
+    "jersey": "31",
+    "gp": 137,
+    "coach": "Hoiberg and Prohm",
+    "years": "2012-2016"
+  },
+  {
+    "name": "Dustin Hogue",
+    "pos": "Forward",
+    "height": 78,
+    "heightStr": "6'6\"",
+    "jersey": "22",
+    "gp": 104,
+    "coach": "Hoiberg",
+    "years": "2012-2015"
+  },
+  {
+    "name": "Sherron Dorsey-Walker",
+    "pos": "Guard",
+    "height": 76,
+    "heightStr": "6'4\"",
+    "jersey": "4",
+    "gp": 23,
+    "coach": "Hoiberg",
+    "years": "2012-2015"
+  },
+  {
+    "name": "Nazareth Mitrou-Long",
+    "pos": "Guard",
+    "height": 76,
+    "heightStr": "6'4\"",
+    "jersey": "15",
+    "gp": 136,
+    "coach": "Hoiberg and Prohm",
+    "years": "2012-2017"
+  },
+  {
+    "name": "Monte Morris",
+    "pos": "Guard",
+    "height": 74,
+    "heightStr": "6'2\"",
+    "jersey": "11",
+    "gp": 140,
+    "coach": "Hoiberg and Prohm",
+    "years": "2013-2017"
+  },
+  {
+    "name": "Matt Thomas",
+    "pos": "Guard",
+    "height": 75,
+    "heightStr": "6'3\"",
+    "jersey": "21",
+    "gp": 138,
+    "coach": "Hoiberg and Prohm",
+    "years": "2013-2017"
+  },
+  {
+    "name": "Naz Long",
+    "pos": "Guard",
+    "height": 76,
+    "heightStr": "6'4\"",
+    "jersey": "14",
+    "gp": 104,
+    "coach": "Hoiberg and Prohm",
+    "years": "2013-2017"
+  },
+  {
+    "name": "DeAndre Kane",
+    "pos": "Guard",
+    "height": 76,
+    "heightStr": "6'4\"",
+    "jersey": "23",
+    "gp": 36,
+    "coach": "Hoiberg",
+    "years": "2013-2014"
+  },
+  {
+    "name": "Daniel Edozie",
+    "pos": "Forward",
+    "height": 80,
+    "heightStr": "6'8\"",
+    "jersey": "42",
+    "gp": 40,
+    "coach": "Hoiberg",
+    "years": "2012-2015"
+  },
+  {
+    "name": "Kourtlin Jackson",
+    "pos": "Guard",
+    "height": 75,
+    "heightStr": "6'3\"",
+    "jersey": "12",
+    "gp": 28,
+    "coach": "Hoiberg and Prohm",
+    "years": "2012-2016"
+  },
+  {
+    "name": "Clayton Custer",
+    "pos": "Guard",
+    "height": 72,
+    "heightStr": "6'0\"",
+    "jersey": "3",
+    "gp": 101,
+    "coach": "Hoiberg and Prohm",
+    "years": "2014-2019"
+  },
+  {
+    "name": "Abdel Nader",
+    "pos": "Forward",
+    "height": 78,
+    "heightStr": "6'6\"",
+    "jersey": "2",
+    "gp": 102,
+    "coach": "Hoiberg and Prohm",
+    "years": "2014-2016"
+  },
+  {
+    "name": "Jameel McKay",
+    "pos": "Forward",
+    "height": 81,
+    "heightStr": "6'9\"",
+    "jersey": "13",
+    "gp": 92,
+    "coach": "Hoiberg and Prohm",
+    "years": "2014-2016"
+  },
+  {
+    "name": "Deonte Burton",
+    "pos": "Guard",
+    "height": 76,
+    "heightStr": "6'4\"",
+    "jersey": "30",
+    "gp": 96,
+    "coach": "Prohm",
+    "years": "2015-2017"
+  },
+  {
+    "name": "Bryce Dejean-Jones",
+    "pos": "Guard",
+    "height": 78,
+    "heightStr": "6'6\"",
+    "jersey": "13",
+    "gp": 33,
+    "coach": "Hoiberg",
+    "years": "2014-2015"
+  },
+  {
+    "name": "Merrill Holden",
+    "pos": "Forward",
+    "height": 80,
+    "heightStr": "6'8\"",
+    "jersey": "5",
+    "gp": 25,
+    "coach": "Hoiberg and Prohm",
+    "years": "2013-2017"
+  },
+  {
+    "name": "Hallice Cooke",
+    "pos": "Guard",
+    "height": 75,
+    "heightStr": "6'3\"",
+    "jersey": "3",
+    "gp": 32,
+    "coach": "Hoiberg and Prohm",
+    "years": "2013-2017"
+  },
+  {
+    "name": "Solomon Young",
+    "pos": "Forward",
+    "height": 80,
+    "heightStr": "6'8\"",
+    "jersey": "33",
+    "gp": 138,
+    "coach": "Prohm",
+    "years": "2015-2021"
+  },
+  {
+    "name": "Jordan Ashton",
+    "pos": "Guard",
+    "height": 76,
+    "heightStr": "6'4\"",
+    "jersey": "23",
+    "gp": 24,
+    "coach": "Hoiberg and Prohm",
+    "years": "2013-2016"
+  },
+  {
+    "name": "Nick Weiler-Babb",
+    "pos": "Guard",
+    "height": 77,
+    "heightStr": "6'5\"",
+    "jersey": "12",
+    "gp": 127,
+    "coach": "Prohm",
+    "years": "2016-2019"
+  },
+  {
+    "name": "Donovan Jackson",
+    "pos": "Guard",
+    "height": 74,
+    "heightStr": "6'2\"",
+    "jersey": "4",
+    "gp": 65,
+    "coach": "Prohm",
+    "years": "2016-2018"
+  },
+  {
+    "name": "Cameron Lard",
+    "pos": "Forward",
+    "height": 81,
+    "heightStr": "6'9\"",
+    "jersey": "2",
+    "gp": 53,
+    "coach": "Prohm",
+    "years": "2016-2019"
+  },
+  {
+    "name": "Jakolby Long",
+    "pos": "Guard",
+    "height": 76,
+    "heightStr": "6'4\"",
+    "jersey": "13",
+    "gp": 31,
+    "coach": "Prohm",
+    "years": "2016-2018"
+  },
+  {
+    "name": "Darrell Bowie",
+    "pos": "Forward",
+    "height": 80,
+    "heightStr": "6'8\"",
+    "jersey": "10",
+    "gp": 33,
+    "coach": "Prohm",
+    "years": "2016-2017"
+  },
+  {
+    "name": "Lindell Wigginton",
+    "pos": "Guard",
+    "height": 74,
+    "heightStr": "6'2\"",
+    "jersey": "5",
+    "gp": 56,
+    "coach": "Prohm",
+    "years": "2017-2019"
+  },
+  {
+    "name": "Terrence Lewis",
+    "pos": "Guard",
+    "height": 78,
+    "heightStr": "6'6\"",
+    "jersey": "24",
+    "gp": 71,
+    "coach": "Prohm",
+    "years": "2017-2020"
+  },
+  {
+    "name": "Hans Brase",
+    "pos": "Forward",
+    "height": 81,
+    "heightStr": "6'9\"",
+    "jersey": "30",
+    "gp": 21,
+    "coach": "Prohm",
+    "years": "2017-2018"
+  },
+  {
+    "name": "Jeff Beverly",
+    "pos": "Forward",
+    "height": 78,
+    "heightStr": "6'6\"",
+    "jersey": "55",
+    "gp": 28,
+    "coach": "Prohm",
+    "years": "2017-2018"
+  },
+  {
+    "name": "Zoran Talley Jr.",
+    "pos": "Forward",
+    "height": 79,
+    "heightStr": "6'7\"",
+    "jersey": "23",
+    "gp": 44,
+    "coach": "Prohm",
+    "years": "2016-2019"
+  },
+  {
+    "name": "Marial Shayok",
+    "pos": "Guard",
+    "height": 78,
+    "heightStr": "6'6\"",
+    "jersey": "3",
+    "gp": 59,
+    "coach": "Prohm",
+    "years": "2018-2019"
+  },
+  {
+    "name": "Michael Jacobson",
+    "pos": "Forward",
+    "height": 81,
+    "heightStr": "6'9\"",
+    "jersey": "12",
+    "gp": 102,
+    "coach": "Prohm",
+    "years": "2018-2020"
+  },
+  {
+    "name": "Tyrese Haliburton",
+    "pos": "Guard",
+    "height": 77,
+    "heightStr": "6'5\"",
+    "jersey": "22",
+    "gp": 57,
+    "coach": "Prohm",
+    "years": "2018-2020"
+  },
+  {
+    "name": "Prentiss Nixon",
+    "pos": "Guard",
+    "height": 74,
+    "heightStr": "6'2\"",
+    "jersey": "13",
+    "gp": 73,
+    "coach": "Prohm",
+    "years": "2018-2020"
+  },
+  {
+    "name": "Talen Horton-Tucker",
+    "pos": "Guard",
+    "height": 76,
+    "heightStr": "6'4\"",
+    "jersey": "11",
+    "gp": 35,
+    "coach": "Prohm",
+    "years": "2018-2019"
+  },
+  {
+    "name": "George Conditt IV",
+    "pos": "Forward",
+    "height": 82,
+    "heightStr": "6'10\"",
+    "jersey": "4",
+    "gp": 121,
+    "coach": "Prohm and Otzelberger",
+    "years": "2018-2022"
+  },
+  {
+    "name": "Zion Griffin",
+    "pos": "Forward",
+    "height": 78,
+    "heightStr": "6'6\"",
+    "jersey": "0",
+    "gp": 47,
+    "coach": "Prohm",
+    "years": "2018-2020"
+  },
+  {
+    "name": "Caleb Grill",
+    "pos": "Guard",
+    "height": 75,
+    "heightStr": "6'3\"",
+    "jersey": "2",
+    "gp": 124,
+    "coach": "Prohm and Otzelberger",
+    "years": "2019-2023"
+  },
+  {
+    "name": "Tre Jackson",
+    "pos": "Guard",
+    "height": 72,
+    "heightStr": "6'0\"",
+    "jersey": "3",
+    "gp": 75,
+    "coach": "Prohm and Otzelberger",
+    "years": "2019-2022"
+  },
+  {
+    "name": "Rasir Bolton",
+    "pos": "Guard",
+    "height": 75,
+    "heightStr": "6'3\"",
+    "jersey": "45",
+    "gp": 51,
+    "coach": "Prohm",
+    "years": "2019-2021"
+  },
+  {
+    "name": "Jalen Coleman-Lands",
+    "pos": "Guard",
+    "height": 76,
+    "heightStr": "6'4\"",
+    "jersey": "5",
+    "gp": 23,
+    "coach": "Prohm",
+    "years": "2020-2021"
+  },
+  {
+    "name": "Xavier Foster",
+    "pos": "Forward",
+    "height": 84,
+    "heightStr": "7'0\"",
+    "jersey": "10",
+    "gp": 42,
+    "coach": "Prohm and Otzelberger",
+    "years": "2020-2022"
+  },
+  {
+    "name": "Jaden Walker",
+    "pos": "Guard",
+    "height": 77,
+    "heightStr": "6'5\"",
+    "jersey": "21",
+    "gp": 37,
+    "coach": "Prohm and Otzelberger",
+    "years": "2020-2022"
+  },
+  {
+    "name": "Tyler Harris",
+    "pos": "Guard",
+    "height": 69,
+    "heightStr": "5'9\"",
+    "jersey": "1",
+    "gp": 24,
+    "coach": "Prohm",
+    "years": "2020-2021"
+  },
+  {
+    "name": "Izaiah Brockington",
+    "pos": "Guard",
+    "height": 76,
+    "heightStr": "6'4\"",
+    "jersey": "1",
+    "gp": 52,
+    "coach": "Otzelberger",
+    "years": "2021-2022"
+  },
+  {
+    "name": "Javan Johnson",
+    "pos": "Forward",
+    "height": 78,
+    "heightStr": "6'6\"",
+    "jersey": "13",
+    "gp": 21,
+    "coach": "Prohm",
+    "years": "2020-2021"
+  },
+  {
+    "name": "Aljaz Kunc",
+    "pos": "Forward",
+    "height": 80,
+    "heightStr": "6'8\"",
+    "jersey": "5",
+    "gp": 58,
+    "coach": "Otzelberger",
+    "years": "2021-2023"
+  },
+  {
+    "name": "Tyrese Hunter",
+    "pos": "Guard",
+    "height": 72,
+    "heightStr": "6'0\"",
+    "jersey": "11",
+    "gp": 35,
+    "coach": "Otzelberger",
+    "years": "2021-2022"
+  },
+  {
+    "name": "Demarion Watson",
+    "pos": "Guard",
+    "height": 72,
+    "heightStr": "6'0\"",
+    "jersey": "4",
+    "gp": 109,
+    "coach": "Otzelberger",
+    "years": "2021-2025"
+  },
+  {
+    "name": "Gabe Kalscheur",
+    "pos": "Guard",
+    "height": 76,
+    "heightStr": "6'4\"",
+    "jersey": "22",
+    "gp": 68,
+    "coach": "Otzelberger",
+    "years": "2021-2023"
+  },
+  {
+    "name": "Osun Osunniyi",
+    "pos": "Center",
+    "height": 82,
+    "heightStr": "6'10\"",
+    "jersey": "21",
+    "gp": 33,
+    "coach": "Otzelberger",
+    "years": "2022-2023"
+  },
+  {
+    "name": "Robert Jones",
+    "pos": "Forward",
+    "height": 82,
+    "heightStr": "6'10\"",
+    "jersey": "12",
+    "gp": 117,
+    "coach": "Otzelberger",
+    "years": "2021-2024"
+  },
+  {
+    "name": "Tristan Enaruna",
+    "pos": "Guard",
+    "height": 80,
+    "heightStr": "6'8\"",
+    "jersey": "23",
+    "gp": 33,
+    "coach": "Otzelberger",
+    "years": "2021-2022"
+  },
+  {
+    "name": "Tre King",
+    "pos": "Forward",
+    "height": 80,
+    "heightStr": "6'8\"",
+    "jersey": "0",
+    "gp": 97,
+    "coach": "Otzelberger",
+    "years": "2022-2024"
+  },
+  {
+    "name": "Tamin Lipsey",
+    "pos": "Guard",
+    "height": 73,
+    "heightStr": "6'1\"",
+    "jersey": "3",
+    "gp": 137,
+    "coach": "Otzelberger",
+    "years": "2022-2026"
+  },
+  {
+    "name": "Eli King",
+    "pos": "Guard",
+    "height": 75,
+    "heightStr": "6'3\"",
+    "jersey": "1",
+    "gp": 9,
+    "coach": "Otzelberger",
+    "years": "2022-2024"
+  },
+  {
+    "name": "Jaren Holmes",
+    "pos": "Guard",
+    "height": 76,
+    "heightStr": "6'4\"",
+    "jersey": "13",
+    "gp": 33,
+    "coach": "Otzelberger",
+    "years": "2022-2023"
+  },
+  {
+    "name": "Milan Momcilovic",
+    "pos": "Forward",
+    "height": 80,
+    "heightStr": "6'8\"",
+    "jersey": "22",
+    "gp": 129,
+    "coach": "Otzelberger",
+    "years": "2022-2026"
+  },
+  {
+    "name": "Nate Heise",
+    "pos": "Guard",
+    "height": 77,
+    "heightStr": "6'5\"",
+    "jersey": "0",
+    "gp": 72,
+    "coach": "Otzelberger",
+    "years": "2024-2026"
+  },
+  {
+    "name": "Hason Ward",
+    "pos": "Forward",
+    "height": 81,
+    "heightStr": "6'9\"",
+    "jersey": "24",
+    "gp": 79,
+    "coach": "Otzelberger",
+    "years": "2022-2024"
+  },
+  {
+    "name": "Conrad Hawley",
+    "pos": "Forward",
+    "height": 78,
+    "heightStr": "6'6\"",
+    "jersey": "23",
+    "gp": 22,
+    "coach": "Otzelberger",
+    "years": "2022-2025"
+  },
+  {
+    "name": "Joshua Jefferson",
+    "pos": "Forward",
+    "height": 81,
+    "heightStr": "6'9\"",
+    "jersey": "5",
+    "gp": 105,
+    "coach": "Otzelberger",
+    "years": "2024-2026"
+  },
+  {
+    "name": "Curtis Jones",
+    "pos": "Guard",
+    "height": 77,
+    "heightStr": "6'5\"",
+    "jersey": "5",
+    "gp": 71,
+    "coach": "Otzelberger",
+    "years": "2023-2025"
+  },
+  {
+    "name": "Keshon Gilbert",
+    "pos": "Guard",
+    "height": 76,
+    "heightStr": "6'4\"",
+    "jersey": "10",
+    "gp": 66,
+    "coach": "Otzelberger",
+    "years": "2023-2025"
+  },
+  {
+    "name": "Cade Kelderman",
+    "pos": "Guard",
+    "height": 73,
+    "heightStr": "6'1\"",
+    "jersey": "13",
+    "gp": 46,
+    "coach": "Otzelberger",
+    "years": "2023-2026"
+  },
+  {
+    "name": "Jackson Paveletzke",
+    "pos": "Guard",
+    "height": 74,
+    "heightStr": "6'2\"",
+    "jersey": "1",
+    "gp": 33,
+    "coach": "Otzelberger",
+    "years": "2023-2024"
+  },
+  {
+    "name": "Jelani Hamilton",
+    "pos": "Guard",
+    "height": 77,
+    "heightStr": "6'5\"",
+    "jersey": "2",
+    "gp": 4,
+    "coach": "Otzelberger",
+    "years": "2023-2024"
+  },
+  {
+    "name": "JT Rock",
+    "pos": "Center",
+    "height": 85,
+    "heightStr": "7'1\"",
+    "jersey": "30",
+    "gp": 18,
+    "coach": "Otzelberger",
+    "years": "2023-2025"
+  },
+  {
+    "name": "Kayden Fish",
+    "pos": "Forward",
+    "height": 79,
+    "heightStr": "6'7\"",
+    "jersey": "11",
+    "gp": 13,
+    "coach": "Otzelberger",
+    "years": "2023-2025"
+  },
+  {
+    "name": "Omaha Biliew",
+    "pos": "Forward",
+    "height": 80,
+    "heightStr": "6'8\"",
+    "jersey": "4",
+    "gp": 20,
+    "coach": "Otzelberger",
+    "years": "2023-2024"
+  },
+  {
+    "name": "Dishon Jackson",
+    "pos": "Center",
+    "height": 83,
+    "heightStr": "6'11\"",
+    "jersey": "1",
+    "gp": 35,
+    "coach": "Otzelberger",
+    "years": "2024-2025"
+  },
+  {
+    "name": "Brandton Chatfield",
+    "pos": "Forward",
+    "height": 82,
+    "heightStr": "6'10\"",
+    "jersey": "33",
+    "gp": 35,
+    "coach": "Otzelberger",
+    "years": "2024-2025"
+  },
+  {
+    "name": "Nojus Indrusaitis",
+    "pos": "Guard",
+    "height": 77,
+    "heightStr": "6'5\"",
+    "jersey": "15",
+    "gp": 15,
+    "coach": "Otzelberger",
+    "years": "2024-2025"
+  },
+  {
+    "name": "Blake Buchanan",
+    "pos": "Forward",
+    "height": 82,
+    "heightStr": "6'10\"",
+    "jersey": "23",
+    "gp": 37,
+    "coach": "Otzelberger",
+    "years": "2025-2026"
+  },
+  {
+    "name": "Dominick Nelson",
+    "pos": "Guard",
+    "height": 77,
+    "heightStr": "6'5\"",
+    "jersey": "11",
+    "gp": 24,
+    "coach": "Otzelberger",
+    "years": "2025-2026"
+  },
+  {
+    "name": "Mason Williams",
+    "pos": "Guard",
+    "height": 77,
+    "heightStr": "6'5\"",
+    "jersey": "2",
+    "gp": 0,
+    "coach": "Otzelberger",
+    "years": "2025-2026"
+  },
+  {
+    "name": "Eric Mulder",
+    "pos": "Forward",
+    "height": 81,
+    "heightStr": "6'9\"",
+    "jersey": "4",
+    "gp": 20,
+    "coach": "Otzelberger",
+    "years": "2025-2026"
+  },
+  {
+    "name": "Jamarion Batemon",
+    "pos": "Guard",
+    "height": 75,
+    "heightStr": "6'3\"",
+    "jersey": "1",
+    "gp": 37,
+    "coach": "Otzelberger",
+    "years": "2025-2026"
+  },
+  {
+    "name": "Xzavion Mitchell",
+    "pos": "Forward",
+    "height": 78,
+    "heightStr": "6'6\"",
+    "jersey": "55",
+    "gp": 7,
+    "coach": "Otzelberger",
+    "years": "2025-2026"
+  },
+  {
+    "name": "Killyan Toure",
+    "pos": "Guard",
+    "height": 75,
+    "heightStr": "6'3\"",
+    "jersey": "27",
+    "gp": 37,
+    "coach": "Otzelberger",
+    "years": "2025-2026"
+  },
+  {
+    "name": "Dominykas Pleta",
+    "pos": "Forward",
+    "height": 83,
+    "heightStr": "6'11\"",
+    "jersey": "21",
+    "gp": 35,
+    "coach": "Otzelberger",
+    "years": "2025-2026"
+  },
+  {
+    "name": "Anthony Rise",
+    "pos": "Guard",
+    "height": 72,
+    "heightStr": "6'0\"",
+    "jersey": "7",
+    "gp": 11,
+    "coach": "Otzelberger",
+    "years": "2025-2026"
+  }
+];
+
+var MAX = 8;
+var state = { guesses: [], usedNames: [], gameOver: false };
+var stats = { played:0, wins:0, streak:0, maxStreak:0, dist:{} };
+
+function dayIndex() {
+  var epoch = new Date('2025-01-01T00:00:00');
+  var now = new Date(); now.setHours(0,0,0,0);
+  return Math.floor((now - epoch) / 86400000);
+}
+
+function todayPlayer() {
+  var seed = dayIndex() * 7919 + 12345;
+  seed = (seed * 1664525 + 1013904223) & 0x7fffffff;
+  return PLAYERS[seed % PLAYERS.length];
+}
+
+var TARGET = todayPlayer();
+
+function inToStr(n) { return Math.floor(n/12) + "'" + (n%12) + '"'; }
+
+function loadStorage() {
+  try { stats = JSON.parse(localStorage.getItem('ciq_stats')) || stats; } catch(e){}
+  var saved = null;
+  try { saved = JSON.parse(localStorage.getItem('ciq_day_' + dayIndex())); } catch(e){}
+  return saved;
+}
+
+function saveDay() {
+  localStorage.setItem('ciq_day_' + dayIndex(), JSON.stringify({
+    gameOver: state.gameOver,
+    won: state.won,
+    guesses: state.guesses
+  }));
+}
+
+function saveStats() {
+  localStorage.setItem('ciq_stats', JSON.stringify(stats));
+}
+
+function renderEmpty() {
+  var html = '';
+  for (var i = 0; i < MAX; i++) {
+    html += '<div class="guess-row" id="row-' + i + '">';
+    html += '<div class="cell name-cell empty">—</div>';
+    for (var j = 0; j < 5; j++) html += '<div class="cell empty">—</div>';
+    html += '</div>';
+  }
+  document.getElementById('rows').innerHTML = html;
+}
+
+function renderDots(filled) {
+  var html = '';
+  for (var i = 0; i < MAX; i++) {
+    var cls = i < filled ? 'used' : (i === filled ? 'current' : '');
+    html += '<div class="dot ' + cls + '"></div>';
+  }
+  document.getElementById('dots').innerHTML = html;
+}
+
+function updateTriesLeft() {
+  var n = MAX - state.guesses.length;
+  document.getElementById('tries-left').textContent = n === 1 ? '1 guess remaining' : n + ' guesses remaining';
+}
+
+function compare(player) {
+  var pos   = player.pos === TARGET.pos ? 'exact' : 'wrong';
+  var hd    = Math.abs(player.height - TARGET.height);
+  var hcls  = hd === 0 ? 'exact' : hd <= 2 ? 'close' : 'wrong';
+  var harr  = hd > 0 ? (player.height < TARGET.height ? ' up' : ' down') : '';
+  var jerNum = parseInt(player.jersey);
+  var tarJerNum = parseInt(TARGET.jersey);
+  var jerDiff = Math.abs(jerNum - tarJerNum);
+  var jer   = jerNum === tarJerNum ? 'exact' : jerDiff <= 3 ? 'close' : 'wrong';
+  var jerarr = jerNum !== tarJerNum ? (jerNum < tarJerNum ? ' up' : ' down') : '';
+  var gd    = Math.abs(player.gp - TARGET.gp);
+  var gcls  = gd === 0 ? 'exact' : gd <= 10 ? 'close' : 'wrong';
+  var garr  = gd > 0 ? (player.gp < TARGET.gp ? ' up' : ' down') : '';
+  var coach;
+  if (player.coach === TARGET.coach) {
+    coach = 'exact';
+  } else {
+    // Yellow if any coach name overlaps between guess and target
+    var pCoaches = player.coach.split(' and ');
+    var tCoaches = TARGET.coach.split(' and ');
+    var overlap = false;
+    for (var ci = 0; ci < pCoaches.length; ci++) {
+      for (var cj = 0; cj < tCoaches.length; cj++) {
+        if (pCoaches[ci].trim() === tCoaches[cj].trim()) { overlap = true; break; }
+      }
+      if (overlap) break;
+    }
+    coach = overlap ? 'close' : 'wrong';
+  }
+  var won   = pos==='exact' && hcls==='exact' && jer==='exact' && gcls==='exact' && coach==='exact'; // jersey must be exact to win
+  return { pos:pos, hcls:hcls, harr:harr, jer:jer, gcls:gcls, garr:garr, coach:coach, won:won };
+}
+
+function fillRow(idx, player, r) {
+  var row = document.getElementById('row-' + idx);
+  row.innerHTML =
+    '<div class="cell name-cell' + (r.won?' exact':'') + '">' + player.name + '</div>' +
+    '<div class="cell ' + r.pos + '">' + player.pos + '</div>' +
+    '<div class="cell ' + r.hcls + r.harr + '">' + player.heightStr + '</div>' +
+    '<div class="cell ' + r.jer + r.jerarr + '">#' + player.jersey + '</div>' +
+    '<div class="cell ' + r.gcls + r.garr + '">' + player.gp + '</div>' +
+    '<div class="cell ' + r.coach + '" style="font-size:10px">' + player.coach + '</div>';
+}
+
+function processGuess(name) {
+  var player = null;
+  for (var i = 0; i < PLAYERS.length; i++) {
+    if (PLAYERS[i].name.toLowerCase() === name.toLowerCase()) { player = PLAYERS[i]; break; }
+  }
+  if (!player) { alert('Player not found — pick from the suggestions.'); return; }
+  for (var i = 0; i < state.usedNames.length; i++) {
+    if (state.usedNames[i] === player.name) { alert('Already guessed ' + player.name + '!'); return; }
+  }
+  if (state.gameOver) return;
+
+  var idx = state.guesses.length;
+  var r = compare(player);
+  state.guesses.push(player.name);
+  state.usedNames.push(player.name);
+  fillRow(idx, player, r);
+  renderDots(state.guesses.length < MAX ? state.guesses.length : MAX);
+  document.getElementById('guess-input').value = '';
+  document.getElementById('suggestions').style.display = 'none';
+
+  if (r.won || state.guesses.length === MAX) {
+    state.gameOver = true;
+    state.won = r.won;
+    stats.played++;
+    if (r.won) {
+      stats.wins++;
+      stats.streak++;
+      if (stats.streak > stats.maxStreak) stats.maxStreak = stats.streak;
+      stats.dist[state.guesses.length] = (stats.dist[state.guesses.length] || 0) + 1;
+    } else {
+      stats.streak = 0;
+    }
+    saveStats();
+    var msg = document.getElementById('msg');
+    if (r.won) { msg.textContent = '🎉 Got it — ' + TARGET.name + '!'; msg.className = 'msg win'; }
+    else { msg.textContent = 'The answer was ' + TARGET.name + '.'; msg.className = 'msg lose'; }
+    document.getElementById('guess-input').disabled = true;
+    document.getElementById('guess-btn').disabled = true;
+    document.getElementById('tries-left').textContent = '';
+    setTimeout(function() { showReveal(r.won); }, 600);
+    showPostGame();
+  } else {
+    updateTriesLeft();
+  }
+  saveDay();
+}
+
+function showReveal(won) {
+  var p = TARGET;
+  var header = document.getElementById('reveal-header');
+  header.className = 'reveal-card-header' + (won ? ' win' : '');
+  document.getElementById('reveal-result-label').textContent = won ? '🎉 You got it!' : 'The answer was';
+  document.getElementById('reveal-player-name').textContent = p.name;
+  document.getElementById('rv-pos').textContent = p.pos;
+  document.getElementById('rv-height').textContent = p.heightStr;
+  document.getElementById('rv-jersey').textContent = '#' + p.jersey;
+  document.getElementById('rv-gp').textContent = p.gp + ' games';
+  document.getElementById('rv-years').textContent = p.years || '—';
+  document.getElementById('rv-guesses').textContent = state.guesses.length + ' / ' + MAX;
+  document.getElementById('rv-coach').textContent = p.coach;
+  document.getElementById('reveal-overlay').classList.add('open');
+}
+
+function showPostGame() {
+  buildEmoji();
+  var wr = stats.played ? Math.round(stats.wins / stats.played * 100) : 0;
+  document.getElementById('result-stats').innerHTML =
+    stat(stats.played,'Played') + stat(wr+'%','Win rate') + stat(stats.streak,'Streak');
+  document.getElementById('post-game').style.display = 'block';
+  startCountdown();
+  document.getElementById('streak-badge').textContent = '🔥 ' + stats.streak;
+}
+
+function stat(n, lbl) {
+  return '<div class="stat-card"><div class="stat-num">' + n + '</div><div class="stat-lbl">' + lbl + '</div></div>';
+}
+
+function buildEmoji() {
+  var map = { exact:'🟩', close:'🟨', wrong:'⬛' };
+  var lines = [];
+  for (var i = 0; i < state.guesses.length; i++) {
+    var p = null;
+    for (var j = 0; j < PLAYERS.length; j++) { if (PLAYERS[j].name === state.guesses[i]) { p = PLAYERS[j]; break; } }
+    if (!p) continue;
+    var r = compare(p);
+    lines.push(map[r.pos] + map[r.hcls] + map[r.jer] + map[r.gcls] + map[r.coach]);
+  }
+  var header = 'Cyclone Ball IQ #' + (dayIndex()+1) + ' ' + (state.won ? state.guesses.length+'/'+MAX : 'X/'+MAX);
+  window._shareText = header + '\n' + lines.join('\n');
+  document.getElementById('emoji-result').innerHTML = header + '<br>' + lines.join('<br>');
+}
+
+function startCountdown() {
+  function tick() {
+    var now = new Date(), next = new Date(now); next.setHours(24,0,0,0);
+    var d = next - now;
+    var h = String(Math.floor(d/3600000)).padStart(2,'0');
+    var m = String(Math.floor((d%3600000)/60000)).padStart(2,'0');
+    var s = String(Math.floor((d%60000)/1000)).padStart(2,'0');
+    document.getElementById('countdown').textContent = h+':'+m+':'+s;
+  }
+  tick(); setInterval(tick, 1000);
+}
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2000);
+}
+
+function updateSuggestions() {
+  var val = document.getElementById('guess-input').value.toLowerCase().trim();
+  var box = document.getElementById('suggestions');
+  if (!val) { box.style.display = 'none'; return; }
+  var matches = [];
+  for (var i = 0; i < PLAYERS.length; i++) {
+    var p = PLAYERS[i];
+    var used = false;
+    for (var j = 0; j < state.usedNames.length; j++) { if (state.usedNames[j] === p.name) { used = true; break; } }
+    if (!used) {
+      var parts = p.name.toLowerCase().split(' ');
+      var firstMatch = parts[0].indexOf(val) === 0;
+      var lastMatch = parts.length > 1 && parts[parts.length-1].indexOf(val) === 0;
+      // Also allow full name substring match once val is 3+ chars (for middle names etc)
+      var fullMatch = val.length >= 3 && p.name.toLowerCase().indexOf(val) !== -1;
+      if (firstMatch || lastMatch || fullMatch) matches.push(p.name);
+    }
+    if (matches.length >= 10) break;
+  }
+  if (!matches.length) { box.style.display = 'none'; return; }
+  var html = '';
+  for (var i = 0; i < matches.length; i++) {
+    html += '<div class="suggestion" data-idx="' + i + '">' + matches[i] + '</div>';
+  }
+  box.innerHTML = html;
+  box.style.display = 'block';
+  box._matches = matches;
+}
+
+function initUI() {
+  // Welcome overlay
+  function closeWelcome() {
+    document.getElementById('welcome-overlay').classList.remove('open');
+    localStorage.setItem('ciq_seen_welcome', '1');
+  }
+  var wc = document.getElementById('welcome-close');
+  var ws = document.getElementById('welcome-start');
+  if (wc) wc.addEventListener('click', closeWelcome);
+  if (ws) ws.addEventListener('click', closeWelcome);
+
+  var input = document.getElementById('guess-input');
+  var box = document.getElementById('suggestions');
+
+  input.addEventListener('input', updateSuggestions);
+
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      var active = box.querySelector('.active');
+      if (active) input.value = active.textContent;
+      box.style.display = 'none';
+      processGuess(input.value.trim());
+    }
+  });
+
+  box.addEventListener('mousedown', function(e) {
+    var item = e.target.closest('.suggestion');
+    if (item) {
+      e.preventDefault();
+      input.value = item.textContent;
+      box.style.display = 'none';
+      input.focus();
+    }
+  });
+
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.input-area')) box.style.display = 'none';
+  });
+
+  document.getElementById('guess-btn').addEventListener('click', function() {
+    processGuess(input.value.trim());
+  });
+
+  document.getElementById('how-btn').addEventListener('click', function() {
+    document.getElementById('how-overlay').classList.add('open');
+  });
+  document.getElementById('how-close').addEventListener('click', function() {
+    document.getElementById('how-overlay').classList.remove('open');
+  });
+  document.getElementById('stats-btn').addEventListener('click', function() {
+    showStatsModal();
+    document.getElementById('stats-overlay').classList.add('open');
+  });
+  document.getElementById('stats-close').addEventListener('click', function() {
+    document.getElementById('stats-overlay').classList.remove('open');
+  });
+  document.querySelectorAll('.overlay').forEach(function(o) {
+    o.addEventListener('click', function(e) { if (e.target === o) o.classList.remove('open'); });
+  });
+  document.getElementById('reveal-close').addEventListener('click', function() {
+    document.getElementById('reveal-overlay').classList.remove('open');
+  });
+  document.getElementById('reveal-share').addEventListener('click', function() {
+    if (navigator.share) navigator.share({ title:'Cyclone Ball IQ', text: window._shareText });
+    else { navigator.clipboard.writeText(window._shareText || '').then(function(){ showToast('Copied!'); }); }
+    document.getElementById('reveal-overlay').classList.remove('open');
+  });
+  document.getElementById('copy-btn').addEventListener('click', function() {
+    navigator.clipboard.writeText(window._shareText || '').then(function() { showToast('Copied!'); });
+  });
+  document.getElementById('share-btn').addEventListener('click', function() {
+    if (navigator.share) navigator.share({ title:'Cyclone Ball IQ', text: window._shareText });
+    else { navigator.clipboard.writeText(window._shareText || '').then(function(){ showToast('Copied!'); }); }
+  });
+
+}
+
+function showStatsModal() {
+  var wr = stats.played ? Math.round(stats.wins / stats.played * 100) : 0;
+  document.getElementById('modal-stats').innerHTML =
+    stat(stats.played,'Played') + stat(wr+'%','Win rate') + stat(stats.streak,'Streak');
+  var dist = document.getElementById('dist');
+  dist.innerHTML = '';
+  var maxVal = 1;
+  for (var k in stats.dist) { if (stats.dist[k] > maxVal) maxVal = stats.dist[k]; }
+  for (var i = 1; i <= MAX; i++) {
+    var count = stats.dist[i] || 0;
+    var pct = Math.round(count / maxVal * 100);
+    dist.innerHTML += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">' +
+      '<span style="font-size:13px;color:#888;width:12px">' + i + '</span>' +
+      '<div style="flex:1;background:#f0eeea;border-radius:4px;height:22px">' +
+      '<div style="width:' + pct + '%;background:#CC0000;height:22px;border-radius:4px;min-width:' + (count?24:0) + 'px;display:flex;align-items:center;justify-content:flex-end;padding-right:6px">' +
+      (count ? '<span style="font-size:12px;font-weight:600;color:#fff">' + count + '</span>' : '') +
+      '</div></div></div>';
+  }
+}
+
+function init() {
+  // Load stats
+  try { var s = localStorage.getItem('ciq_stats'); if (s) stats = JSON.parse(s); } catch(e){}
+  document.getElementById('streak-badge').textContent = '🔥 ' + stats.streak;
+
+  // Set puzzle info
+  document.getElementById('puzzle-num').textContent = 'Puzzle #' + (dayIndex()+1);
+  var d = new Date();
+  document.getElementById('date-str').textContent = d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+
+  // Reset game state fresh
+  state = { guesses: [], usedNames: [], gameOver: false, won: false };
+
+  renderEmpty();
+  renderDots(0);
+
+  // Check for saved game today
+  var saved = null;
+  try { var sv = localStorage.getItem('ciq_day_' + dayIndex()); if (sv) saved = JSON.parse(sv); } catch(e){}
+
+  if (saved && saved.guesses && saved.guesses.length) {
+    for (var i = 0; i < saved.guesses.length; i++) {
+      var name = saved.guesses[i];
+      var player = null;
+      for (var j = 0; j < PLAYERS.length; j++) { if (PLAYERS[j].name === name) { player = PLAYERS[j]; break; } }
+      if (!player) continue;
+      var r = compare(player);
+      state.guesses.push(player.name);
+      state.usedNames.push(player.name);
+      fillRow(state.guesses.length - 1, player, r);
+    }
+    renderDots(state.guesses.length < MAX ? state.guesses.length : MAX);
+    if (saved.gameOver) {
+      state.gameOver = true;
+      state.won = saved.won;
+      var msg = document.getElementById('msg');
+      if (saved.won) { msg.textContent = '🎉 Got it — ' + TARGET.name + '!'; msg.className = 'msg win'; }
+      else { msg.textContent = 'The answer was ' + TARGET.name + '.'; msg.className = 'msg lose'; }
+      document.getElementById('guess-input').disabled = true;
+      document.getElementById('guess-btn').disabled = true;
+      document.getElementById('tries-left').textContent = '';
+      showPostGame();
+    } else {
+      updateTriesLeft();
+    }
+  } else {
+    updateTriesLeft();
+  }
+
+  initUI();
+
+  // Show welcome on first ever visit only
+  if (!localStorage.getItem('ciq_seen_welcome')) {
+    document.getElementById('welcome-overlay').classList.add('open');
+  }
+}
+
+init();
+</script>
+</body>
+</html>
